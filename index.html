@@ -29,6 +29,48 @@
         font-size: 12px;
         color: #8b93a7;
       }
+      #controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+      }
+      #controls label {
+        color: #8b93a7;
+      }
+      #seed-input {
+        width: 110px;
+        padding: 4px 6px;
+        background: #12161f;
+        border: 1px solid #2a3040;
+        border-radius: 3px;
+        color: #cfd6e4;
+        font: inherit;
+      }
+      #seed-input:focus {
+        outline: 1px solid #ffd166;
+      }
+      #seed-input.invalid {
+        border-color: #e5534b;
+        outline: 1px solid #e5534b;
+      }
+      button {
+        padding: 4px 10px;
+        background: #1a2030;
+        border: 1px solid #2a3040;
+        border-radius: 3px;
+        color: #cfd6e4;
+        font: inherit;
+        cursor: pointer;
+      }
+      button:hover:not(:disabled) {
+        border-color: #ffd166;
+        color: #ffd166;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
       canvas {
         image-rendering: pixelated;
         border: 1px solid #2a3040;
@@ -41,7 +83,13 @@
   <body>
     <div id="wrap">
       <h1>WFCrawler</h1>
-      <div id="hud">seed: <span id="seed">?</span> — append ?seed=123 to the URL for another dungeon</div>
+      <div id="hud">seed: <span id="seed">?</span> — type a seed below and hit Regenerate, or append ?seed=123 to the URL</div>
+      <div id="controls">
+        <label for="seed-input">seed</label>
+        <input id="seed-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" />
+        <button id="regenerate" type="button">Regenerate</button>
+        <button id="export-png" type="button" disabled>Export PNG</button>
+      </div>
       <canvas id="map"></canvas>
     </div>
     <script type="module" src="/src/main.ts"></script>
