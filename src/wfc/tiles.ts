@@ -50,32 +50,36 @@ function allSockets(socket: SocketId): Record<Direction, SocketId> {
 
 /** Built-in dungeon tile set. */
 export const TILES: readonly TileDef[] = [
-  { id: 'wall', sockets: allSockets('wall'), weight: 4, color: '#232a3a' },
-  { id: 'floor', sockets: allSockets('floor'), weight: 3, color: '#7d7461' },
-  { id: 'room', sockets: allSockets('floor'), weight: 2, color: '#9c8f6f' },
+  { id: 'wall', sockets: allSockets('wall'), weight: 4, color: '#232a3a', walkable: false },
+  { id: 'floor', sockets: allSockets('floor'), weight: 3, color: '#7d7461', walkable: true },
+  { id: 'room', sockets: allSockets('floor'), weight: 2, color: '#9c8f6f', walkable: true },
   {
     id: 'corridorH',
     sockets: { n: 'wall', e: 'open', s: 'wall', w: 'open' },
     weight: 1.5,
     color: '#5d584a',
+    walkable: true,
   },
   {
     id: 'corridorV',
     sockets: { n: 'open', e: 'wall', s: 'open', w: 'wall' },
     weight: 1.5,
     color: '#5d584a',
+    walkable: true,
   },
   {
     id: 'doorH',
     sockets: { n: 'wall', e: 'door', s: 'wall', w: 'door' },
     weight: 0.6,
     color: '#d4a72c',
+    walkable: true,
   },
   {
     id: 'doorV',
     sockets: { n: 'door', e: 'wall', s: 'door', w: 'wall' },
     weight: 0.6,
     color: '#d4a72c',
+    walkable: true,
   },
 ];
 
@@ -86,4 +90,13 @@ export function getTile(id: string): TileDef {
   const tile = TILE_BY_ID.get(id);
   if (!tile) throw new Error(`unknown tile id: ${id}`);
   return tile;
+}
+
+/**
+ * True when actors can stand on / move through a tile. Every built-in tile is
+ * walkable except wall; custom tiles default to walkable unless their
+ * definition sets `walkable: false`.
+ */
+export function isWalkableTile(tileId: string): boolean {
+  return getTile(tileId).walkable ?? true;
 }

@@ -21,6 +21,11 @@ export interface TileDef {
   readonly weight: number;
   /** Fill color used by the canvas renderer. */
   readonly color: string;
+  /**
+   * Whether actors can stand on this tile. Defaults to true; the built-in
+   * wall tile sets it to false.
+   */
+  readonly walkable?: boolean;
 }
 
 /** A single grid cell while the solver is running. */
