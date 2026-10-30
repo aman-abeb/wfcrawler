@@ -71,12 +71,12 @@ Tests are pure Node (no browser, no network): determinism-by-seed, adjacency val
 <!-- builder:roadmap:start -->
 ## Status
 
-**In active development:** 1 of 4 milestones done.
+**In active development:** 2 of 4 milestones done.
 
 ## Roadmap
 
 - [x] **WFC core, seeded generator and tests**: Implement the Wave Function Collapse solver: a tile set with socket/adjacency rules (floor, wall, corridor, door, room), a seeded RNG, entropy-based cell selection, constraint propagation, and restart-on-contradiction. Add a minimal Vite page that renders one generated map to a canvas. Vitest suite covers solver invariants (no contradictions, every adjacency valid, same seed => same map). Runnable via npm run dev and npm test from day one.
-- [ ] **Collapse animation and map rendering**: Expose a step-wise solver API and drive a tile-by-tile collapse animation with requestAnimationFrame, highlighting the observed cell and remaining entropy. Add canvas tile rendering, grid overlay, a seed input with regenerate button, and PNG export of the finished map. Tests assert the stepped collapse matches the batch result for a seed and that the adjacency validator passes over rendered output.
+- [x] **Collapse animation and map rendering**: Expose a step-wise solver API and drive a tile-by-tile collapse animation with requestAnimationFrame, highlighting the observed cell and remaining entropy. Add canvas tile rendering, grid overlay, a seed input with regenerate button, and PNG export of the finished map. Tests assert the stepped collapse matches the batch result for a seed and that the adjacency validator passes over rendered output.
 - [ ] **Playable turn-based roguelike layer**: Layer gameplay on a generated map through a headless game-state API: player movement (arrows/WASD), shadowcasting field-of-view, monsters with chase/attack AI, items (healing potion, sword), combat resolution, a stairs/amulet win condition, HP/lose overlay, and an HUD showing HP, seed and turn. Vitest covers FOV bounds/symmetry, combat math, AI decisions, item pickup and win/lose transitions without a browser.
 - [ ] **Polish, balance simulation and README showcase**: Add a keyboard-help overlay, restart/new-seed flow, a combat/loot log, and a node script that runs N seeded headless games to sanity-check balance (win rate, average turns). Write the README with an animated GIF of collapse then exploration, controls, a static generated map, architecture notes and run instructions. Finish with npm run build and npm test green.
 <!-- builder:roadmap:end -->
