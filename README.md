@@ -11,16 +11,17 @@ Seeded Wave Function Collapse dungeon generator with a playable turn-based rogue
 
 - Deterministic WFC solver (mulberry32-seeded) with socket/adjacency rules for wall, floor, room, corridor and door tiles
 - Entropy-based cell selection, queue-based constraint propagation, restart-on-contradiction
-- Step-wise solver API that drives a tile-by-tile collapse animation on a canvas
+- Tile-by-tile collapse animation on canvas: the freshly observed cell is highlighted and an entropy HUD strip counts down the remaining options
+- Step-wise solver API wrapped by a DOM-free `CollapseAnimator` (highlight, remaining entropy, completion state) that is unit-tested in Node
 - Seed via URL (`?seed=42`); identical maps reproduced by tests
-- Vitest suite covering solver invariants, adjacency validation and determinism-by-seed
+- Vitest suite covering solver invariants, adjacency validation, determinism-by-seed and the collapse animator
 
 ## Quickstart
 
 ```bash
 npm install
 npm run dev     # open http://localhost:5173 (try http://localhost:5173/?seed=42)
-npm test        # vitest run — all solver tests, once, no watch mode
+npm test        # vitest run — all tests, once, no watch mode
 npm run build   # type-check (tsc --noEmit) + vite build
 npm start       # serve the production build via vite preview
 ```
@@ -31,20 +32,22 @@ npm start       # serve the production build via vite preview
 $ npm test
 
  ✓ src/wfc/solver.test.ts (19 tests) 38ms
+ ✓ src/render/animator.test.ts (10 tests) 11ms
 
- Test Files  1 passed (1)
-      Tests  19 passed (19)
+ Test Files  2 passed (2)
+      Tests  29 passed (29)
 ```
 
-The dev page collapses a 56×34 dungeon tile by tile for the seed in the URL. Reloading with the same seed replays the exact same collapse and produces the identical map.
+The dev page collapses a 56×34 dungeon tile by tile for the seed in the URL. Each animation frame observes a few cells, outlines the newest one, and updates the HUD strip below the map with the seed, remaining entropy, collapsed-cell count and restarts. Reloading with the same seed replays the exact same collapse and produces the identical map.
 
 ## How it works
 
 - `src/wfc/rng.ts` — mulberry32 PRNG plus integer / pick / weighted-pick helpers. All randomness in the project flows through this one seeded stream.
 - `src/wfc/tiles.ts` — the tile set. Each tile has four sockets (n/e/s/w); two adjacent tiles are legal when their touching sockets form an allowed pair. The map border uses an `edge` socket that only `wall` may touch.
 - `src/wfc/solver.ts` — `WFCSolver` keeps a set of possible tiles per cell. `step()` observes the lowest-entropy cell (weighted-random among its options), then propagates constraints through a queue; a contradiction restarts the grid deterministically. `generateMap()` runs a solver to completion, and `validateAdjacency()` re-checks a finished map against the socket rules.
-- `src/render/mapCanvas.ts` — canvas renderer used both by the collapse animation (`renderCell`) and the final map (`renderMap`).
-- `src/main.ts` — wires it together: reads `?seed=`, steps the solver on `requestAnimationFrame`, and paints each observed cell.
+- `src/render/animator.ts` — `CollapseAnimator` drives `WFCSolver.step()` one observation at a time and exposes `step()` / `snapshot()`: the highlighted cell, remaining entropy (sum of remaining options), cells left, restarts and done state. `formatHud()` renders a snapshot as the HUD line. No DOM access, so the whole animation state machine is testable in Node.
+- `src/render/mapCanvas.ts` — canvas renderer. `renderCell()` paints one tile plus its grid border during the animation, `renderHighlight()` outlines the observed cell, `renderHud()` draws the opaque entropy strip (repainted every frame so text never smears), and `renderMap()` paints the finished map with the full grid overlay.
+- `src/main.ts` — wires it together: reads `?seed=`, advances the animator on `requestAnimationFrame` (a few steps per frame), repaints the previous highlight cell, draws the new highlight and the HUD, and stops the loop when the map is complete.
 
 ## Running tests
 
@@ -52,7 +55,7 @@ The dev page collapses a 56×34 dungeon tile by tile for the seed in the URL. Re
 npm test
 ```
 
-Tests are pure Node (no browser, no network): determinism-by-seed, adjacency validity across 25 seeds, border enclosure, stepped-vs-batch equivalence, RNG behavior and tile-rule symmetry.
+Tests are pure Node (no browser, no network): determinism-by-seed, adjacency validity across 25 seeds, border enclosure, stepped-vs-batch equivalence, animator invariants (final grid equals the batch map for a seed, remaining entropy never increases between restarts, highlight always in bounds), RNG behavior and tile-rule symmetry.
 
 <!-- builder:roadmap:start -->
 ## Status
