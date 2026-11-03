@@ -15,16 +15,18 @@ Seeded Wave Function Collapse dungeon generator with a playable turn-based rogue
 - Seed control in the page: a seed input + Regenerate button (keeps `?seed=` in the URL in sync) and an Export PNG button that downloads the finished map as `wfcrawler-<seed>.png`
 - Step-wise solver API wrapped by a DOM-free `CollapseAnimator` (highlight, remaining entropy, completion state) that is unit-tested in Node
 - Seed via URL (`?seed=42`); identical maps reproduced by tests
+- Headless balance simulator (`npm run simulate`): N seeded games played by a greedy BFS bot, reporting win/loss rate, average turns and kills — deterministic per seed and unit-tested in Node
 - Vitest suite covering solver invariants, adjacency validation, determinism-by-seed, the collapse animator and PNG export
 
 ## Quickstart
 
 ```bash
 npm install
-npm run dev     # open http://localhost:5173 (try http://localhost:5173/?seed=42)
-npm test        # vitest run — all tests, once, no watch mode
-npm run build   # type-check (tsc --noEmit) + vite build
-npm start       # serve the production build via vite preview
+npm run dev      # open http://localhost:5173 (try http://localhost:5173/?seed=42)
+npm test         # vitest run — all tests, once, no watch mode
+npm run simulate # headless balance sim: 100 seeded bot games (npm run simulate -- 200 1 2000 --json)
+npm run build    # type-check (tsc --noEmit) + vite build
+npm start        # serve the production build via vite preview
 ```
 
 ## Controls
@@ -59,6 +61,8 @@ The dev page collapses a 56×34 dungeon tile by tile for the seed in the URL (or
 - `src/render/mapCanvas.ts` — canvas renderer. `renderCell()` paints one tile plus its grid border during the animation, `renderHighlight()` outlines the observed cell, `renderHud()` draws the opaque entropy strip (repainted every frame so text never smears), and `renderMap()` paints the finished map with the full grid overlay.
 - `src/render/export.ts` — `sanitizeSeed()` parses seed text (digits only, wrapped to uint32, null on invalid input) and `exportMapPng()` reads `canvas.toDataURL('image/png')` and triggers a `wfcrawler-<seed>.png` download through a temporary anchor. DOM access is guarded behind a `typeof document` check, so the helpers stay unit-testable in Node with a stub canvas.
 - `src/main.ts` — wires it together: reads `?seed=`, advances the animator on `requestAnimationFrame` (a few steps per frame), repaints the previous highlight cell, draws the new highlight and the HUD, and stops the loop when the map is complete (enabling the Export PNG button). The Regenerate button re-reads the seed input, updates `?seed=` via `history.replaceState`, and restarts the animation from scratch with a fresh `CollapseAnimator`.
+- `src/game/simulate.ts` — the headless balance simulator. `bfsDistances()` gives deterministic walkable distances, `spawnMonsters()` places seeded monsters on walkable tiles away from the player, and a greedy bot steps toward the nearest living monster (bump-attacking when adjacent, falling back to a seeded random walk when none is reachable) while monsters chase and strike back through the seeded combat rolls. `runSeededGame(seed, maxTurns)` plays one game to a won/lost/turn-capped `GameResult`; `runSimulations(count, baseSeed, maxTurns)` aggregates win/loss rates, average turns and kills into `SimulationStats`, and `formatBalanceReport()` renders them as text. Fully DOM-free and unit-tested in Node.
+- `scripts/simulate.ts` — the CLI wrapper behind `npm run simulate -- [count] [baseSeed] [maxTurns] [--json]`: it prints the balance summary and, with `--json`, the full stats including per-game results.
 
 ## Running tests
 
@@ -66,7 +70,7 @@ The dev page collapses a 56×34 dungeon tile by tile for the seed in the URL (or
 npm test
 ```
 
-Tests are pure Node (no browser, no network): determinism-by-seed, adjacency validity across 25 seeds, border enclosure, stepped-vs-batch equivalence, animator invariants (final grid equals the batch map for a seed, remaining entropy never increases between restarts, highlight always in bounds), RNG behavior, tile-rule symmetry, seed sanitizing and PNG export (PNG data URL + `wfcrawler-<seed>.png` filename via a stub canvas).
+Tests are pure Node (no browser, no network): determinism-by-seed, adjacency validity across 25 seeds, border enclosure, stepped-vs-batch equivalence, animator invariants (final grid equals the batch map for a seed, remaining entropy never increases between restarts, highlight always in bounds), RNG behavior, tile-rule symmetry, seed sanitizing and PNG export (PNG data URL + `wfcrawler-<seed>.png` filename via a stub canvas). The suite also covers the headless simulator: determinism by seed, turn-cap and terminal-status bounds, kill accounting and the aggregation math.
 
 <!-- builder:roadmap:start -->
 ## Status
