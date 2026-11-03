@@ -6,14 +6,34 @@ export type GameStatus = 'playing' | 'won' | 'lost';
 /** Cardinal movement input, matching the WFC socket directions. */
 export type Direction = GridDirection;
 
-/** The player actor. */
-export interface Player {
-  readonly x: number;
-  readonly y: number;
-  /** Current hit points; the run is lost at 0. */
+/** Anything with hit points that can take damage in melee combat. */
+export interface Combatant {
+  /** Current hit points; the combatant is dead at 0. */
   readonly hp: number;
   /** Maximum hit points. */
   readonly maxHp: number;
+}
+
+/** The player actor. */
+export interface Player extends Combatant {
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * A monster actor spawned on a walkable dungeon tile. Monsters are headless:
+ * all of their behaviour lives in monsters.ts and is driven by the seeded
+ * rngState stored on the game state, so a run replays identically from its seed.
+ */
+export interface Monster extends Combatant {
+  /** Unique id within one game, assigned in spawn order. */
+  readonly id: number;
+  readonly x: number;
+  readonly y: number;
+  /** Maximum damage of one hit; damage rolls uniformly in 1..attack. */
+  readonly attack: number;
+  /** Distance in tiles at which the monster notices and chases the player. */
+  readonly aggroRange: number;
 }
 
 /**
